@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_chat_core/flutter_chat_core.dart';
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flyer_chat_image_message/flyer_chat_image_message.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:gemini_app/presentation/providers/chat/basic_chat.dart';
@@ -18,6 +20,7 @@ class BasicPromptScreen extends ConsumerStatefulWidget {
 class _BasicPromptScreenState extends ConsumerState<BasicPromptScreen> {
   final ChatController _chatController = InMemoryChatController();
   final _uuid = const Uuid();
+  List<XFile> images = [];
 
   @override
   void initState() {
@@ -59,17 +62,26 @@ class _BasicPromptScreenState extends ConsumerState<BasicPromptScreen> {
             },
             chatController: _chatController,
             onMessageSend: (text) async {
+              for (final image in images) {
+                _chatController.insertMessage(
+                  ImageMessage(
+                    id: _uuid.v4(),
+                    authorId: user.id,
+                    source: image.path,
+                  ),
+                );
+              }
               _chatController.insertMessage(
                 TextMessage(id: _uuid.v4(), authorId: user.id, text: text),
               );
 
               ref
                   .read(basicChatProvider.notifier)
-                  .addMessage(text: text, user: user);
+                  .addMessage(text: text, user: user, images: images);
 
               final geminiResponse = await ref
                   .read(basicChatProvider.notifier)
-                  .geminiStreamResponse(text);
+                  .geminiStreamResponse(text, images: images);
               if (geminiResponse.isNotEmpty) {
                 _chatController.insertMessage(
                   TextMessage(
@@ -80,6 +92,23 @@ class _BasicPromptScreenState extends ConsumerState<BasicPromptScreen> {
                 );
               }
             },
+            onAttachmentTap: () async {
+              images = [];
+              ImagePicker picker = ImagePicker();
+              images = await picker.pickMultiImage(limit: 4);
+              // setState(() {});
+              if (images.isEmpty) return;
+            },
+            builders: Builders(
+              imageMessageBuilder:
+                  (
+                    context,
+                    message,
+                    index, {
+                    required bool isSentByMe,
+                    MessageGroupStatus? groupStatus,
+                  }) => FlyerChatImageMessage(message: message, index: index),
+            ),
             theme: ChatTheme.light(),
           ),
           if (isGeminiWritting)

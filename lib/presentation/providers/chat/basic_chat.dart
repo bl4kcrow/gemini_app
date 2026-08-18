@@ -1,4 +1,5 @@
 import 'package:flutter_chat_core/flutter_chat_core.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
@@ -21,15 +22,35 @@ class BasicChat extends _$BasicChat {
     return [];
   }
 
-  void addMessage({required String text, required User user}) {
-    //TODO: Add condition when an image is comming
+  void addMessage({
+    required String text,
+    required User user,
+    List<XFile> images = const [],
+  }) {
+    if (images.isNotEmpty) {
+      _addTextMessageWithImages(text, user, images);
+      return;
+    }
 
     _addTextMessage(text, user);
   }
 
   void _addTextMessage(String text, User author) {
     _createTextMessage(text, author.id);
-    // _geminiTextResponse(text);
+  }
+
+  void _addTextMessageWithImages(
+    String text,
+    User author,
+    List<XFile> images,
+  ) async {
+    for (XFile image in images) {
+      _createImageMessage(image, author);
+    }
+
+    await Future.delayed(Duration(milliseconds: 10));
+
+    _createTextMessage(text, author.id);
   }
 
   Future<String> geminiTextResponse(String prompt) async {
@@ -43,18 +64,21 @@ class BasicChat extends _$BasicChat {
     return textResponse;
   }
 
-  Future<String> geminiStreamResponse(String prompt) async {
+  Future<String> geminiStreamResponse(
+    String prompt, {
+    List<XFile> images = const [],
+  }) async {
     _setGeminiWritingStatus(true);
 
     String updatedMessage = '';
 
-    final subscription = gemini.getStreamResponse(prompt).listen((
-      responseChunk,
-    ) {
-      if (responseChunk.isNotEmpty) {
-        updatedMessage = responseChunk;
-      }
-    });
+    final subscription = gemini.getStreamResponse(prompt, files: images).listen(
+      (responseChunk) {
+        if (responseChunk.isNotEmpty) {
+          updatedMessage = responseChunk;
+        }
+      },
+    );
 
     await subscription.asFuture();
     _createTextMessage(updatedMessage, geminiUser.id);
@@ -69,6 +93,18 @@ class BasicChat extends _$BasicChat {
       authorId: author,
       text: text,
       createdAt: DateTime.now(),
+    );
+
+    state = [message, ...state];
+  }
+
+  Future<void> _createImageMessage(XFile image, User author) async {
+    final message = ImageMessage(
+      id: uuid.v4(),
+      authorId: author.id,
+      createdAt: DateTime.now(),
+      source: image.path,
+      size: await image.length(),
     );
 
     state = [message, ...state];

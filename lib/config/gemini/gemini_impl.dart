@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:image_picker/image_picker.dart';
 
 class GeminiImpl {
   final Dio _http = Dio(
@@ -22,12 +23,28 @@ class GeminiImpl {
     }
   }
 
-  Stream<String> getStreamResponse(String prompt) async* {
+  Stream<String> getStreamResponse(
+    String prompt, {
+    List<XFile> files = const [],
+  }) async* {
     try {
-      final body = jsonEncode({'prompt': prompt});
+      final formData = FormData();
+      formData.fields.add(MapEntry('prompt', prompt));
+
+      if (files.isNotEmpty) {
+        for (final file in files) {
+          formData.files.add(
+            MapEntry(
+              'files',
+              await MultipartFile.fromFile(file.path, filename: file.name),
+            ),
+          );
+        }
+      }
+
       final response = await _http.post(
         '/basic-prompt-stream',
-        data: body,
+        data: formData,
         options: Options(responseType: ResponseType.stream),
       );
 
