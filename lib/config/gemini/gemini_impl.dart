@@ -23,13 +23,43 @@ class GeminiImpl {
     }
   }
 
-  Stream<String> getStreamResponse(
+  Stream<String> getBasicStreamResponse(
     String prompt, {
     List<XFile> files = const [],
+  }) async* {
+    yield* _getStreamResponse(
+      endpoint: '/basic-stream-response',
+      prompt: prompt,
+      files: files,
+    );
+  }
+
+  Stream<String> getChatStream(
+    String prompt, {
+    required String chatId,
+    List<XFile> files = const [],
+  }) async* {
+    yield* _getStreamResponse(
+      endpoint: '/chat-stream',
+      prompt: prompt,
+      files: files,
+      additionalFormFields: {'chatId': chatId},
+    );
+  }
+
+  Stream<String> _getStreamResponse({
+    required String endpoint,
+    required String prompt,
+    List<XFile> files = const [],
+    Map<String, dynamic> additionalFormFields = const {},
   }) async* {
     try {
       final formData = FormData();
       formData.fields.add(MapEntry('prompt', prompt));
+
+      for (final entry in additionalFormFields.entries) {
+        formData.fields.add(MapEntry(entry.key, entry.value));
+      }
 
       if (files.isNotEmpty) {
         for (final file in files) {
@@ -43,7 +73,7 @@ class GeminiImpl {
       }
 
       final response = await _http.post(
-        '/basic-prompt-stream',
+        endpoint,
         data: formData,
         options: Options(responseType: ResponseType.stream),
       );

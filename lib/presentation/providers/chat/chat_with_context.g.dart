@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'basic_chat.dart';
+part of 'chat_with_context.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -9,28 +9,28 @@ part of 'basic_chat.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(BasicChat)
-const basicChatProvider = BasicChatProvider._();
+@ProviderFor(ChatWithContext)
+const chatWithContextProvider = ChatWithContextProvider._();
 
-final class BasicChatProvider
-    extends $NotifierProvider<BasicChat, List<Message>> {
-  const BasicChatProvider._()
+final class ChatWithContextProvider
+    extends $NotifierProvider<ChatWithContext, List<Message>> {
+  const ChatWithContextProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'basicChatProvider',
+        name: r'chatWithContextProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$basicChatHash();
+  String debugGetCreateSourceHash() => _$chatWithContextHash();
 
   @$internal
   @override
-  BasicChat create() => BasicChat();
+  ChatWithContext create() => ChatWithContext();
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(List<Message> value) {
@@ -41,9 +41,9 @@ final class BasicChatProvider
   }
 }
 
-String _$basicChatHash() => r'4b8d196742972b200130334f624dfefa3def2d1d';
+String _$chatWithContextHash() => r'47bb54ebf4b61990fbac1422401359571a95fa45';
 
-abstract class _$BasicChat extends $Notifier<List<Message>> {
+abstract class _$ChatWithContext extends $Notifier<List<Message>> {
   List<Message> build();
   @$mustCallSuper
   @override

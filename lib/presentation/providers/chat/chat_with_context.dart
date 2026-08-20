@@ -7,18 +7,20 @@ import 'package:gemini_app/config/gemini/gemini_impl.dart';
 import 'package:gemini_app/presentation/providers/chat/is_gemini_writting.dart';
 import 'package:gemini_app/presentation/providers/users/user_provider.dart';
 
-part 'basic_chat.g.dart';
+part 'chat_with_context.g.dart';
 
 final uuid = Uuid();
 
 @Riverpod(keepAlive: true)
-class BasicChat extends _$BasicChat {
+class ChatWithContext extends _$ChatWithContext {
   final gemini = GeminiImpl();
   late User geminiUser;
+  late String chatId;
 
   @override
   List<Message> build() {
     geminiUser = ref.read(geminiUserProvider);
+    chatId = uuid.v4();
     return [];
   }
 
@@ -73,14 +75,12 @@ class BasicChat extends _$BasicChat {
     String updatedMessage = '';
 
     final subscription = gemini
-        .getBasicStreamResponse(prompt, files: images)
-        .listen(
-      (responseChunk) {
-        if (responseChunk.isNotEmpty) {
-          updatedMessage = responseChunk;
-        }
-      },
-    );
+        .getChatStream(prompt, files: images, chatId: chatId)
+        .listen((responseChunk) {
+          if (responseChunk.isNotEmpty) {
+            updatedMessage = responseChunk;
+          }
+        });
 
     await subscription.asFuture();
     _createTextMessage(updatedMessage, geminiUser.id);
@@ -89,6 +89,11 @@ class BasicChat extends _$BasicChat {
   }
 
   // Helper methods
+  void newChat() {
+    chatId = uuid.v4();
+    state = [];
+  }
+  
   void _createTextMessage(String text, String author) {
     final message = TextMessage(
       id: uuid.v4(),

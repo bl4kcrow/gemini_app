@@ -6,18 +6,18 @@ import 'package:flyer_chat_image_message/flyer_chat_image_message.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 
-import 'package:gemini_app/presentation/providers/chat/basic_chat.dart';
+import 'package:gemini_app/presentation/providers/chat/chat_with_context.dart';
 import 'package:gemini_app/presentation/providers/chat/is_gemini_writting.dart';
 import 'package:gemini_app/presentation/providers/users/user_provider.dart';
 
-class BasicPromptScreen extends ConsumerStatefulWidget {
-  const BasicPromptScreen({super.key});
+class ChatContextScreen extends ConsumerStatefulWidget {
+  const ChatContextScreen({super.key});
 
   @override
-  ConsumerState<BasicPromptScreen> createState() => _BasicPromptScreenState();
+  ConsumerState<ChatContextScreen> createState() => _ChatScreenState();
 }
 
-class _BasicPromptScreenState extends ConsumerState<BasicPromptScreen> {
+class _ChatScreenState extends ConsumerState<ChatContextScreen> {
   final ChatController _chatController = InMemoryChatController();
   final _uuid = const Uuid();
   List<XFile> images = [];
@@ -25,7 +25,7 @@ class _BasicPromptScreenState extends ConsumerState<BasicPromptScreen> {
   @override
   void initState() {
     super.initState();
-    final chatMessages = ref.read(basicChatProvider);
+    final chatMessages = ref.read(chatWithContextProvider);
     _chatController.setMessages(chatMessages);
   }
 
@@ -42,7 +42,17 @@ class _BasicPromptScreenState extends ConsumerState<BasicPromptScreen> {
     final geminiUser = ref.watch(geminiUserProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Basic Prompt')),
+      appBar: AppBar(
+        title: const Text('Chat Context'),
+        actions: [
+          IconButton(
+            onPressed: () {
+              ref.read(chatWithContextProvider.notifier).newChat();
+            },
+            icon: const Icon(Icons.delete),
+          ),
+        ],
+      ),
       body: Stack(
         children: [
           Chat(
@@ -76,11 +86,11 @@ class _BasicPromptScreenState extends ConsumerState<BasicPromptScreen> {
               );
 
               ref
-                  .read(basicChatProvider.notifier)
+                  .read(chatWithContextProvider.notifier)
                   .addMessage(text: text, user: user, images: images);
 
               final geminiResponse = await ref
-                  .read(basicChatProvider.notifier)
+                  .read(chatWithContextProvider.notifier)
                   .geminiStreamResponse(text, images: images);
               if (geminiResponse.isNotEmpty) {
                 _chatController.insertMessage(
