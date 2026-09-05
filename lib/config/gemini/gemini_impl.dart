@@ -28,7 +28,7 @@ class GeminiImpl {
     List<XFile> files = const [],
   }) async* {
     yield* _getStreamResponse(
-      endpoint: '/basic-stream-response',
+      endpoint: '/basic-prompt-stream',
       prompt: prompt,
       files: files,
     );
